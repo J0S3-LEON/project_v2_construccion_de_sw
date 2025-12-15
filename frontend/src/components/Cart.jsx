@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext'
 export default function Cart({ carrito, clientes, clienteSeleccionado, onEliminarDelCarrito, onSeleccionarCliente, onProcesarVenta }) {
   const total = carrito.reduce((t, i) => t + i.subtotal, 0)
   const { showToast } = useToast()
+  const [paymentMethod, setPaymentMethod] = React.useState('cash')
 
   function changeQty(idx, delta) {
     const updated = [...carrito]
@@ -45,15 +46,23 @@ export default function Cart({ carrito, clientes, clienteSeleccionado, onElimina
         <div className="form-row">
           <div>
             <label>Cliente</label>
-            <select onChange={e => onSeleccionarCliente(clientes.find(c => c.id === e.target.value))} value={clienteSeleccionado?.id || ''}>
+            <select onChange={e => onSeleccionarCliente(clientes.find(c => c.id === Number(e.target.value)))} value={clienteSeleccionado?.id || ''}>
               <option value="">--Selecciona--</option>
               {clientes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label>Método de pago</label>
+            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="transfer">Transferencia</option>
             </select>
           </div>
           <div className="center text-right">
             <div style={{marginRight:12}}>Total: <strong>${total}</strong></div>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <button className="button" onClick={() => onProcesarVenta('cash')}>Procesar venta</button>
+              <button className="button" onClick={() => onProcesarVenta(paymentMethod)}>Procesar venta</button>
               <button className="btn-secondary" onClick={() => { if (confirm('Vaciar carrito?')) window.dispatchEvent(new CustomEvent('cart:updated', { detail: [] })) }}>Vaciar carrito</button>
             </div>
           </div>

@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { useToast } from '../context/ToastContext'
+import EditClientModal from './EditClientModal'
 
 export default function Clients({ clients, onAgregarCliente, onEliminarCliente, onEditarCliente, loading }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const { showToast } = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingClient, setEditingClient] = useState(null)
 
   const handleAdd = async () => {
     if (!name) return showToast('Nombre requerido', 'error')
@@ -14,22 +17,29 @@ export default function Clients({ clients, onAgregarCliente, onEliminarCliente, 
       setName(''); setEmail('')
       showToast('Cliente agregado', 'info')
     } catch (err) {
+      // friendly message on 401
+      if (err.message && err.message.includes('Sesión expirada')) {
+        showToast(err.message, 'error')
+        // optionally force logout by dispatching event so App can handle it
+        window.dispatchEvent(new CustomEvent('auth:expired'))
+        return
+      }
       showToast(err.response?.data?.message || err.message || 'Error al agregar cliente', 'error')
     }
   }
 
   async function handleEdit(c) {
-    const newName = prompt('Editar nombre', c.name)
-    if (!newName) return
-    const newEmail = prompt('Editar email', c.email)
-    if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) return alert('Email inválido')
+    setEditingClient(c)
+    setModalOpen(true)
+  }
+
+  async function handleSaveClient(payload) {
+    if (!editingClient) return
     try {
-      if (onEditarCliente) {
-        await onEditarCliente(c.id, { name: newName, email: newEmail })
-      } else {
-        await onAgregarCliente({ name: newName, email: newEmail })
-      }
+      await onEditarCliente(editingClient.id, payload)
       showToast('Cliente actualizado', 'info')
+      setModalOpen(false)
+      setEditingClient(null)
     } catch (err) {
       showToast(err.response?.data?.message || err.message || 'Error al actualizar cliente', 'error')
     }
@@ -48,6 +58,8 @@ export default function Clients({ clients, onAgregarCliente, onEliminarCliente, 
       </div>
 
       {clients.length === 0 && <div className="card muted">No hay clientes aún</div>}
+
+      <EditClientModal open={modalOpen} client={editingClient} onClose={() => { setModalOpen(false); setEditingClient(null) }} onSave={handleSaveClient} />
 
       {clients.map(c => (
         <div className="card" key={c.id}>

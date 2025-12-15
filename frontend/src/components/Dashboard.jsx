@@ -1,4 +1,5 @@
 import React from 'react'
+import SalesHistory from './SalesHistory'
 
 export default function Dashboard({ totalVentas = 0, ingresosTotales = 0 }) {
   return (
@@ -14,6 +15,7 @@ export default function Dashboard({ totalVentas = 0, ingresosTotales = 0 }) {
           <div style={{fontSize:24,fontWeight:700}}>${ingresosTotales}</div>
         </div>
       </div>
+      <SalesHistory />
     </div>
   )
 }

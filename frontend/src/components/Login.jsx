@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../context/ToastContext'
 
@@ -9,6 +9,26 @@ export default function Login({ setVista }) {
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [showRegister, setShowRegister] = useState(false)
+  const [name, setName] = useState('')
+  const [rateInfo, setRateInfo] = useState(null)
+  const [attemptsLeft, setAttemptsLeft] = useState(null)
+
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1') + '/auth/rate-info')
+        if (!active) return
+        const json = await res.json()
+        setRateInfo(json)
+      } catch (err) {
+        // ignore
+      }
+    }
+    load()
+    return () => { active = false }
+  }, [])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -17,6 +37,9 @@ export default function Login({ setVista }) {
       showToast('Bienvenido', 'info')
       setVista('dashboard')
     } catch (err) {
+      // Show remaining attempts if available from headers
+      const remaining = err.response?.headers?.['ratelimit-remaining']
+      if (remaining != null) setAttemptsLeft(Number(remaining))
       showError(err)
     }
   }
@@ -24,9 +47,10 @@ export default function Login({ setVista }) {
   async function handleRegister(e) {
     e.preventDefault()
     try {
-      await register({ name: email.split('@')[0], email, password })
+      await register({ name: name || email.split('@')[0], email, password })
       setSuccessMsg('Registrado. Ya puedes iniciar sesión.')
       setTimeout(() => setSuccessMsg(''), 3000)
+      setShowRegister(false)
     } catch (err) {
       showError(err)
     }
@@ -53,11 +77,17 @@ export default function Login({ setVista }) {
   return (
     <div className="center" style={{paddingTop:40}}>
       <div style={{width:360}}>
-        <h2 style={{marginBottom:8}}>Iniciar sesión</h2>
-        <form onSubmit={handleLogin} className="card">
+        <h2 style={{marginBottom:8}}>{showRegister ? 'Registrar usuario' : 'Iniciar sesión'}</h2>
+        <form onSubmit={showRegister ? handleRegister : handleLogin} className="card">
           {errorMsg && <div className="alert" style={{marginBottom:12}}>{errorMsg}</div>}
           {successMsg && <div className="card" style={{background:'#e6fffa',border:'1px solid #bdeede',marginBottom:12}}>{successMsg}</div>}
+          {rateInfo && <div className="muted" style={{marginBottom:8}}>Intentos permitidos: {rateInfo.maxAttempts} cada {Math.round(rateInfo.windowSeconds/60)} min</div>}
+          {attemptsLeft != null && <div className="muted" style={{marginBottom:8}}>Intentos restantes: {attemptsLeft}</div>}
           <div>
+            {showRegister && <div style={{marginBottom:8}}>
+              <label>Nombre</label>
+              <input placeholder="Nombre" value={name} onChange={e => setName(e.target.value)} />
+            </div>}
             <label>Email</label>
             <input type="email" placeholder="ejemplo@dominio.com" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
@@ -66,8 +96,8 @@ export default function Login({ setVista }) {
             <input type="password" placeholder="mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           <div style={{ marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <button className="button" type="submit">Login</button>
-            <button type="button" className="btn-secondary" onClick={handleRegister}>Register</button>
+            <button className="button" type="submit">{showRegister ? 'Registrar' : 'Login'}</button>
+            <button type="button" className="btn-secondary" onClick={() => { setShowRegister(s => !s); setErrorMsg(''); setSuccessMsg('') }}>{showRegister ? 'Volver a Login' : 'Crear cuenta'}</button>
           </div>
         </form>
       </div>

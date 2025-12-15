@@ -25,6 +25,24 @@ async function start() {
       console.warn('Warning seeding admin user:', seedErr.message || seedErr);
     }
 
+    // Seed some example products if none exist
+    try {
+      const { Product } = await import('./modules/products/products.model.js');
+      const count = await Product.count();
+      if (count === 0) {
+        await Product.bulkCreate([
+          { name: 'Zapatillas Runner', description: 'Cómodas y ligeras', price: 59.99, stock: 10, sku: 'ZR-001' },
+          { name: 'Camiseta Deportiva', description: 'Transpirable', price: 19.50, stock: 25, sku: 'CD-002' },
+          { name: 'Balón Oficial', description: 'Tamaño 5', price: 29.00, stock: 5, sku: 'BO-003' },
+          { name: 'Malla de Natación', description: 'Resistente al cloro', price: 24.99, stock: 8, sku: 'MN-004' },
+          { name: 'Gorra Runner', description: 'Ligera y ajustable', price: 12.00, stock: 0, sku: 'GR-005' }
+        ])
+        console.log('Seeded example products')
+      }
+    } catch (pErr) {
+      console.warn('Warning seeding products:', pErr.message || pErr)
+    }
+
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });

@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useToast } from './context/ToastContext'
 import { useClients } from './hooks/useClients'
 import { useProducts } from './hooks/useProducts'
 import { useSales } from './hooks/useSales'
+import api from './services/api'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import Catalog from './components/Catalog'
@@ -14,11 +15,13 @@ export default function App() {
   const { usuarioActual, logout } = useAuth()
   const { showToast } = useToast()
   const { clients, agregarCliente, eliminarCliente, editarCliente, loading: clientsLoading } = useClients()
-  const { products, loading: productsLoading } = useProducts()
+  const { products, loading: productsLoading, createProduct } = useProducts()
   const { checkout } = useSales()
 
   const [vista, setVista] = useState(usuarioActual ? 'dashboard' : 'login')
   const [carrito, setCarrito] = useState([])
+  const [totalVentas, setTotalVentas] = useState(0)
+  const [ingresosTotales, setIngresosTotales] = useState(0)
   // persist carrito in localStorage so users don't lose it on refresh
   useEffect(() => {
     const raw = localStorage.getItem('cart')
@@ -28,6 +31,70 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(carrito))
   }, [carrito])
+
+  // handle undo action from toast (removes one last occurrence of product)
+  useEffect(() => {
+    function handler(e) {
+      const productId = e.detail?.productId
+      if (!productId) return
+      setCarrito(prev => {
+        for (let i = prev.length - 1; i >= 0; i--) {
+          if (prev[i].id === productId) {
+            const next = prev.filter((_, idx) => idx !== i)
+            return next
+          }
+        }
+        // nothing removed
+        showToast('No se encontró el producto en el carrito', 'error')
+        return prev
+      })
+    }
+    window.addEventListener('cart:undo', handler)
+    return () => window.removeEventListener('cart:undo', handler)
+  }, [showToast])
+
+  // when user logs in, fetch server cart and merge with local cart
+  useEffect(() => {
+    if (!usuarioActual) return
+    let active = true
+    const sync = async () => {
+      try {
+        const res = await api.get('/cart')
+        if (!active) return
+        const serverItems = res.data.cart.items || []
+        // build maps
+        const localMap = {}
+        carrito.forEach(i => { localMap[i.id] = (localMap[i.id] || 0) + (i.cantidad || 1) })
+        const merged = { ...localMap }
+        serverItems.forEach(si => { merged[si.productId] = (merged[si.productId] || 0) + si.qty })
+        // rebuild cart array using products details when available
+        const newCart = Object.entries(merged).flatMap(([idStr, qty]) => {
+          const id = idStr
+          const prod = products.find(p => String(p.id) === String(id)) || { id, name: 'Producto', price: 0 }
+          return Array.from({ length: qty }).map(() => ({ ...prod, cantidad: 1, subtotal: (prod.price || 0) }))
+        })
+        setCarrito(newCart)
+        // persist merged cart to server
+        const payload = { cart: { items: Object.entries(merged).map(([productId, qty]) => ({ productId, qty })) } }
+        await api.put('/cart', payload)
+      } catch (err) {
+        console.error(err)
+        showToast('No se pudo sincronizar carrito', 'error')
+      }
+    }
+    sync()
+    return () => { active = false }
+    // only run when usuarioActual changes (initial login)
+  }, [usuarioActual])
+
+  // when carrito changes and user is authenticated, save to server
+  useEffect(() => {
+    if (!usuarioActual) return
+    const itemsMap = {}
+    carrito.forEach(i => { itemsMap[i.id] = (itemsMap[i.id] || 0) + (i.cantidad || 1) })
+    const payload = { cart: { items: Object.entries(itemsMap).map(([productId, qty]) => ({ productId: Number(productId), qty })) } }
+    api.put('/cart', payload).catch(err => console.error('Failed saving cart', err))
+  }, [carrito, usuarioActual])
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
 
   const agregarAlCarrito = (p) => {
@@ -46,18 +113,53 @@ export default function App() {
     return () => window.removeEventListener('cart:updated', handler)
   }, [])
 
+  // Listen for auth expiration events (from hooks/components)
+  useEffect(() => {
+    function onAuthExpired() {
+      showToast('Sesión expirada, vuelva a iniciar sesión', 'error')
+      logout()
+      setVista('login')
+    }
+    window.addEventListener('auth:expired', onAuthExpired)
+    return () => window.removeEventListener('auth:expired', onAuthExpired)
+  }, [logout, showToast])
+
   const procesarVenta = async (metodoPago) => {
     if (!clienteSeleccionado) return showToast('Seleccione cliente', 'error')
     if (carrito.length === 0) return showToast('Carrito vacío', 'error')
     const items = carrito.map(i => ({ productId: i.id, qty: i.cantidad }))
     try {
-      await checkout({ clientId: clienteSeleccionado.id, items, paymentMethod: metodoPago })
+      const sale = await checkout({ clientId: clienteSeleccionado.id, items, paymentMethod: metodoPago })
       showToast('Venta realizada con éxito', 'info')
+      // update dashboard counters immediately
+      setTotalVentas(prev => prev + 1)
+      setIngresosTotales(prev => prev + Number(sale.total || 0))
       setCarrito([])
       setClienteSeleccionado(null)
       setVista('dashboard')
+      // notify sales list components to refresh
+      window.dispatchEvent(new CustomEvent('sales:updated', { detail: sale }))
     } catch (err) { showToast(err.response?.data?.error || err.message, 'error') }
   }
+
+  // Fetch sales stats when user logs in
+  useEffect(() => {
+    if (!usuarioActual) return
+    let active = true
+    const load = async () => {
+      try {
+        const res = await api.get('/sales?limit=1000')
+        if (!active) return
+        const sales = res.data.data || []
+        setTotalVentas(sales.length)
+        setIngresosTotales(sales.reduce((acc, s) => acc + Number(s.total || 0), 0))
+      } catch (err) {
+        console.error('Failed loading sales stats', err)
+      }
+    }
+    load()
+    return () => { active = false }
+  }, [usuarioActual])
 
   if (!usuarioActual) return <Login setVista={setVista} />
 
@@ -79,8 +181,8 @@ export default function App() {
       </header>
 
       <main className="container" style={{paddingTop:12}}>
-        {vista === 'dashboard' && <Dashboard />}
-        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} loading={productsLoading} />}
+        {vista === 'dashboard' && <Dashboard totalVentas={totalVentas} ingresosTotales={ingresosTotales} />}
+        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} onCrearProducto={createProduct} loading={productsLoading} />}
         {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} onEditarCliente={editarCliente} loading={clientsLoading} />}
         {vista === 'cart' && <Cart carrito={carrito} clientes={clients} clienteSeleccionado={clienteSeleccionado} onEliminarDelCarrito={eliminarDelCarrito} onSeleccionarCliente={setClienteSeleccionado} onProcesarVenta={procesarVenta} />}
       </main>

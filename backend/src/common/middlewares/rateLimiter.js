@@ -14,11 +14,17 @@ export const globalLimiter = rateLimit({ windowMs: GLOBAL_WINDOW_MS, max: GLOBAL
 export const authLimiter = rateLimit({
 	windowMs: AUTH_WINDOW_MS,
 	max: AUTH_MAX,
+	// expose standard rate limit headers so clients can read remaining attempts
+	standardHeaders: true,
+	legacyHeaders: false,
 	handler: (req, res) => {
 		// Retry-After expects seconds
 		res.set('Retry-After', String(Math.ceil(AUTH_WINDOW_MS / 1000)));
 		return res.status(429).json({ message: 'Too many auth attempts, please try again later.' });
 	}
 });
+
+// Export constants so other parts of the app (e.g., controllers) can report them
+export { AUTH_MAX, AUTH_WINDOW_MS };
 
 export default { globalLimiter, authLimiter };

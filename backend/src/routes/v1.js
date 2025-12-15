@@ -14,6 +14,8 @@ import productsRoutes from '../modules/products/products.routes.js';
 router.use('/products', productsRoutes);
 import salesRoutes from '../modules/sales/sales.routes.js';
 router.use('/sales', salesRoutes);
+import cartRoutes from '../modules/cart/cart.routes.js';
+router.use('/cart', cartRoutes);
 
 // TODO: montar otros módulos
 // router.use('/clients', clientsRoutes);
