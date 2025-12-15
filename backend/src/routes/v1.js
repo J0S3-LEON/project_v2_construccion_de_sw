@@ -10,6 +10,8 @@ import authRoutes from '../modules/auth/auth.routes.js';
 router.use('/auth', authRoutes);
 import clientsRoutes from '../modules/clients/clients.routes.js';
 router.use('/clients', clientsRoutes);
+import productsRoutes from '../modules/products/products.routes.js';
+router.use('/products', productsRoutes);
 
 // TODO: montar otros módulos
 // router.use('/clients', clientsRoutes);
