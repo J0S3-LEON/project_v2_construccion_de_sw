@@ -2,7 +2,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+import xss from 'xss-clean';
+import { globalLimiter } from './common/middlewares/rateLimiter.js';
 import config from './config/index.js';
 import v1Routes from './routes/v1.js';
 import errorHandler from './common/middlewares/errorHandler.js';
@@ -14,10 +15,20 @@ app.use(helmet());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Security middlewares
+app.use(xss()); // sanitize user input
 app.use(cors({ origin: config.corsOrigin }));
+app.use(helmet.contentSecurityPolicy({
+	useDefaults: true,
+	directives: {
+		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'"],
+		objectSrc: ["'none'"],
+		upgradeInsecureRequests: [],
+	},
+}));
 
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-app.use(limiter);
+app.use(globalLimiter);
 
 // Routes
 app.use('/api/v1', v1Routes);
