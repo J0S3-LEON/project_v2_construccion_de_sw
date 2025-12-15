@@ -67,6 +67,10 @@ label{display:block;margin-bottom:6px;font-weight:600}
 /* Alerts */
 .alert{padding:10px 12px;border-radius:8px;background:#fff3cd;color:#856404;border:1px solid #ffeeba}
 
+/* Spinner */
+.spinner{width:28px;height:28px;border-radius:50%;border:4px solid rgba(0,0,0,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
 /* keep old simple classes for compatibility */
 .card{margin-bottom:16px}
 .button{padding:10px 14px}

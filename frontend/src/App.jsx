@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
+import { useToast } from './context/ToastContext'
 import { useClients } from './hooks/useClients'
 import { useProducts } from './hooks/useProducts'
 import { useSales } from './hooks/useSales'
@@ -11,12 +12,22 @@ import Cart from './components/Cart'
 
 export default function App() {
   const { usuarioActual, logout } = useAuth()
-  const { clients, agregarCliente, eliminarCliente } = useClients()
-  const { products } = useProducts()
+  const { showToast } = useToast()
+  const { clients, agregarCliente, eliminarCliente, editarCliente, loading: clientsLoading } = useClients()
+  const { products, loading: productsLoading } = useProducts()
   const { checkout } = useSales()
 
   const [vista, setVista] = useState(usuarioActual ? 'dashboard' : 'login')
   const [carrito, setCarrito] = useState([])
+  // persist carrito in localStorage so users don't lose it on refresh
+  useEffect(() => {
+    const raw = localStorage.getItem('cart')
+    if (raw) setCarrito(JSON.parse(raw))
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(carrito))
+  }, [carrito])
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
 
   const agregarAlCarrito = (p) => {
@@ -26,17 +37,26 @@ export default function App() {
 
   const eliminarDelCarrito = (i) => setCarrito(carrito.filter((_, idx) => idx !== i))
 
+  // Listen for cart updates from child components (quantity changes)
+  useEffect(() => {
+    function handler(e) {
+      setCarrito(e.detail)
+    }
+    window.addEventListener('cart:updated', handler)
+    return () => window.removeEventListener('cart:updated', handler)
+  }, [])
+
   const procesarVenta = async (metodoPago) => {
-    if (!clienteSeleccionado) return alert('Seleccione cliente')
-    if (carrito.length === 0) return alert('Carrito vacío')
+    if (!clienteSeleccionado) return showToast('Seleccione cliente', 'error')
+    if (carrito.length === 0) return showToast('Carrito vacío', 'error')
     const items = carrito.map(i => ({ productId: i.id, qty: i.cantidad }))
     try {
       await checkout({ clientId: clienteSeleccionado.id, items, paymentMethod: metodoPago })
-      alert('Venta realizada')
+      showToast('Venta realizada con éxito', 'info')
       setCarrito([])
       setClienteSeleccionado(null)
       setVista('dashboard')
-    } catch (err) { alert(err.response?.data?.error || err.message) }
+    } catch (err) { showToast(err.response?.data?.error || err.message, 'error') }
   }
 
   if (!usuarioActual) return <Login setVista={setVista} />
@@ -60,8 +80,8 @@ export default function App() {
 
       <main className="container" style={{paddingTop:12}}>
         {vista === 'dashboard' && <Dashboard />}
-        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} />}
-        {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} />}
+        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} loading={productsLoading} />}
+        {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} onEditarCliente={editarCliente} loading={clientsLoading} />}
         {vista === 'cart' && <Cart carrito={carrito} clientes={clients} clienteSeleccionado={clienteSeleccionado} onEliminarDelCarrito={eliminarDelCarrito} onSeleccionarCliente={setClienteSeleccionado} onProcesarVenta={procesarVenta} />}
       </main>
       <footer style={{padding:'24px 0', marginTop:24}} className="center">

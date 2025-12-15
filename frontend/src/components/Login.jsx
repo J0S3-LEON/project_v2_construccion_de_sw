@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../context/ToastContext'
 
 export default function Login({ setVista }) {
   const { login, register } = useAuth()
+  const { showToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
@@ -12,6 +14,7 @@ export default function Login({ setVista }) {
     e.preventDefault()
     try {
       await login({ email, password });
+      showToast('Bienvenido', 'info')
       setVista('dashboard')
     } catch (err) {
       showError(err)

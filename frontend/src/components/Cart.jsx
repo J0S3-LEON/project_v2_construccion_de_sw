@@ -1,7 +1,24 @@
 import React from 'react'
+import { useToast } from '../context/ToastContext'
 
 export default function Cart({ carrito, clientes, clienteSeleccionado, onEliminarDelCarrito, onSeleccionarCliente, onProcesarVenta }) {
   const total = carrito.reduce((t, i) => t + i.subtotal, 0)
+  const { showToast } = useToast()
+
+  function changeQty(idx, delta) {
+    const updated = [...carrito]
+    const item = updated[idx]
+    const newQty = Math.max(1, (item.cantidad || 1) + delta)
+    // validate against stock if present
+    if (item.stock != null && newQty > item.stock) {
+      showToast('No hay suficiente stock', 'error')
+      return
+    }
+    item.cantidad = newQty
+    item.subtotal = item.price ? item.price * newQty : item.subtotal
+    // notify parent by calling a custom event on window (we'll handle in App)
+    window.dispatchEvent(new CustomEvent('cart:updated', { detail: updated }))
+  }
 
   return (
     <div>
@@ -14,8 +31,12 @@ export default function Cart({ carrito, clientes, clienteSeleccionado, onElimina
             <div className="muted">Cantidad: {item.cantidad}</div>
           </div>
           <div className="text-right">
-            <div>${item.subtotal}</div>
-            <button className="btn-secondary" onClick={() => onEliminarDelCarrito(idx)}>Eliminar</button>
+            <div style={{marginBottom:8}}>${item.subtotal}</div>
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+              <button className="btn-secondary" onClick={() => changeQty(idx, -1)}>-</button>
+              <button className="btn-secondary" onClick={() => changeQty(idx, +1)}>+</button>
+              <button className="btn-secondary" onClick={() => onEliminarDelCarrito(idx)}>Eliminar</button>
+            </div>
           </div>
         </div>
       ))}
@@ -31,7 +52,10 @@ export default function Cart({ carrito, clientes, clienteSeleccionado, onElimina
           </div>
           <div className="center text-right">
             <div style={{marginRight:12}}>Total: <strong>${total}</strong></div>
-            <button className="button" onClick={() => onProcesarVenta('cash')}>Procesar venta</button>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <button className="button" onClick={() => onProcesarVenta('cash')}>Procesar venta</button>
+              <button className="btn-secondary" onClick={() => { if (confirm('Vaciar carrito?')) window.dispatchEvent(new CustomEvent('cart:updated', { detail: [] })) }}>Vaciar carrito</button>
+            </div>
           </div>
         </div>
       </div>
