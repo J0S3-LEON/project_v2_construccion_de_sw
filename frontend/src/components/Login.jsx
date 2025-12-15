@@ -5,34 +5,69 @@ export default function Login({ setVista }) {
   const { login, register } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   async function handleLogin(e) {
     e.preventDefault()
-    try { await login({ email, password }); setVista('dashboard') } catch (err) { alert(err.response?.data?.error || err.message) }
+    try {
+      await login({ email, password });
+      setVista('dashboard')
+    } catch (err) {
+      showError(err)
+    }
   }
 
   async function handleRegister(e) {
     e.preventDefault()
-    try { await register({ name: email.split('@')[0], email, password }); alert('Registrado. Ya puedes iniciar sesión.') } catch (err) { alert(err.response?.data?.error || err.message) }
+    try {
+      await register({ name: email.split('@')[0], email, password })
+      setSuccessMsg('Registrado. Ya puedes iniciar sesión.')
+      setTimeout(() => setSuccessMsg(''), 3000)
+    } catch (err) {
+      showError(err)
+    }
+  }
+  
+  // Show more detailed validation errors if present
+  function showError(err) {
+    setSuccessMsg('')
+    if (!err) return setErrorMsg('Error desconocido')
+    const resp = err.response?.data
+    if (resp?.errors && Array.isArray(resp.errors)) return setErrorMsg(resp.errors.join('\n'))
+    if (resp?.message) return setErrorMsg(resp.message)
+
+    const status = err.response?.status
+    const retryAfter = err.response?.headers?.['retry-after']
+    if (status === 429) {
+      const wait = retryAfter ? `${retryAfter} segundos` : 'unos minutos'
+      return setErrorMsg(resp?.error || `Demasiados intentos. Intenta de nuevo en ${wait}.`)
+    }
+
+    return setErrorMsg(resp?.error || err.message || 'Error')
   }
 
   return (
-    <div className="container">
-      <h2>Login</h2>
-      <form onSubmit={handleLogin} className="card">
-        <div>
-          <label>Email</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <button className="button" type="submit">Login</button>
-          <button type="button" style={{ marginLeft: 8 }} onClick={handleRegister}>Register</button>
-        </div>
-      </form>
+    <div className="center" style={{paddingTop:40}}>
+      <div style={{width:360}}>
+        <h2 style={{marginBottom:8}}>Iniciar sesión</h2>
+        <form onSubmit={handleLogin} className="card">
+          {errorMsg && <div className="alert" style={{marginBottom:12}}>{errorMsg}</div>}
+          {successMsg && <div className="card" style={{background:'#e6fffa',border:'1px solid #bdeede',marginBottom:12}}>{successMsg}</div>}
+          <div>
+            <label>Email</label>
+            <input type="email" placeholder="ejemplo@dominio.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
+          <div style={{marginTop:12}}>
+            <label>Contraseña</label>
+            <input type="password" placeholder="mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+          </div>
+          <div style={{ marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <button className="button" type="submit">Login</button>
+            <button type="button" className="btn-secondary" onClick={handleRegister}>Register</button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

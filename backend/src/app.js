@@ -17,7 +17,20 @@ app.use(morgan('dev'));
 
 // Security middlewares
 app.use(xss()); // sanitize user input
-app.use(cors({ origin: config.corsOrigin }));
+
+// CORS: Allow configured origins, and in development accept any localhost port (vite variations)
+const corsOptions = {
+	origin: (origin, callback) => {
+		// allow non-browser tools (no origin)
+		if (!origin) return callback(null, true);
+		if (config.nodeEnv === 'development' && /^https?:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+		const allowed = (config.corsOrigin || '').split(',').map(s => s.trim());
+		if (allowed.includes(origin)) return callback(null, true);
+		return callback(new Error('Not allowed by CORS'));
+	}
+};
+
+app.use(cors(corsOptions));
 app.use(helmet.contentSecurityPolicy({
 	useDefaults: true,
 	directives: {

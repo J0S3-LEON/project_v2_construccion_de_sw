@@ -2,16 +2,20 @@ import React from 'react'
 
 export default function Catalog({ productos, onAgregar }) {
   return (
-    <div className="container">
+    <div>
       <h2>Catálogo</h2>
-      {productos.map(p => (
-        <div className="card" key={p.id}>
-          <strong>{p.name}</strong>
-          <div>{p.description}</div>
-          <div>Precio: ${p.price}</div>
-          <button className="button" onClick={() => onAgregar(p)}>Agregar</button>
-        </div>
-      ))}
+      <div className="grid">
+        {productos.map(p => (
+          <div className="card product-card" key={p.id}>
+            <div className="product-name">{p.name}</div>
+            <div className="product-desc">{p.description}</div>
+            <div className="product-meta">
+              <div className="muted">Precio: ${p.price}</div>
+              <button className="button" onClick={() => onAgregar(p)}>Agregar</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

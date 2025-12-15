@@ -11,19 +11,27 @@ export default function Clients({ clients, onAgregarCliente, onEliminarCliente }
   }
 
   return (
-    <div className="container">
+    <div>
       <h2>Clientes</h2>
       <div className="card">
-        <input placeholder="Nombre" value={name} onChange={e => setName(e.target.value)} />
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <button className="button" onClick={handleAdd}>Agregar</button>
+        <div className="form-row">
+          <input placeholder="Nombre" value={name} onChange={e => setName(e.target.value)} />
+          <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+          <button className="button" onClick={handleAdd}>Agregar</button>
+        </div>
       </div>
 
       {clients.map(c => (
         <div className="card" key={c.id}>
-          <div><strong>{c.name}</strong></div>
-          <div>{c.email}</div>
-          <button onClick={() => onEliminarCliente(c.id)}>Eliminar</button>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div>
+              <div><strong>{c.name}</strong></div>
+              <div className="muted">{c.email}</div>
+            </div>
+            <div>
+              <button className="btn-secondary" onClick={() => onEliminarCliente(c.id)}>Eliminar</button>
+            </div>
+          </div>
         </div>
       ))}
     </div>

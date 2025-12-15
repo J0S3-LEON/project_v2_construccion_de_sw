@@ -43,18 +43,30 @@ export default function App() {
 
   return (
     <div>
-      <div className="nav">
-        <div style={{cursor:'pointer'}} onClick={() => setVista('dashboard')}>Dashboard</div>
-        <div style={{cursor:'pointer'}} onClick={() => setVista('catalog')}>Catálogo</div>
-        <div style={{cursor:'pointer'}} onClick={() => setVista('clients')}>Clientes</div>
-        <div style={{cursor:'pointer'}} onClick={() => setVista('cart')}>Carrito ({carrito.length})</div>
-        <div style={{marginLeft:'auto'}}><button className="button" onClick={() => { logout(); setVista('login') }}>Logout</button></div>
-      </div>
+      <header className="site-header">
+        <div className="container">
+          <div className="logo" onClick={() => setVista('dashboard')} style={{cursor:'pointer'}}>Kioma Sport</div>
+          <nav className="nav">
+            <div className={`nav-item`} onClick={() => setVista('dashboard')}>Dashboard</div>
+            <div className={`nav-item`} onClick={() => setVista('catalog')}>Catálogo</div>
+            <div className={`nav-item`} onClick={() => setVista('clients')}>Clientes</div>
+            <div className={`nav-item`} onClick={() => setVista('cart')}>Carrito ({carrito.length})</div>
+          </nav>
+          <div className="nav-right">
+            <button className="button" onClick={() => { logout(); setVista('login') }}>Logout</button>
+          </div>
+        </div>
+      </header>
 
-      {vista === 'dashboard' && <Dashboard />}
-      {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} />}
-      {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} />}
-      {vista === 'cart' && <Cart carrito={carrito} clientes={clients} clienteSeleccionado={clienteSeleccionado} onEliminarDelCarrito={eliminarDelCarrito} onSeleccionarCliente={setClienteSeleccionado} onProcesarVenta={procesarVenta} />}
+      <main className="container" style={{paddingTop:12}}>
+        {vista === 'dashboard' && <Dashboard />}
+        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} />}
+        {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} />}
+        {vista === 'cart' && <Cart carrito={carrito} clientes={clients} clienteSeleccionado={clienteSeleccionado} onEliminarDelCarrito={eliminarDelCarrito} onSeleccionarCliente={setClienteSeleccionado} onProcesarVenta={procesarVenta} />}
+      </main>
+      <footer style={{padding:'24px 0', marginTop:24}} className="center">
+        <div className="muted">Kioma Sport · Proyecto final · &copy; {new Date().getFullYear()}</div>
+      </footer>
     </div>
   )
 }
