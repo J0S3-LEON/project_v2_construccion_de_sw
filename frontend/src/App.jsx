@@ -98,6 +98,11 @@ export default function App() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
 
   const agregarAlCarrito = (p) => {
+    // prevent adding more than available stock
+    if (p.stock != null) {
+      const currentQty = carrito.filter(i => String(i.id) === String(p.id)).length
+      if (currentQty >= p.stock) return showToast(`Insufficient stock for product ${p.name}`, 'error')
+    }
     const item = { ...p, cantidad: 1, subtotal: p.price }
     setCarrito([...carrito, item])
   }
@@ -121,7 +126,9 @@ export default function App() {
       setVista('login')
     }
     window.addEventListener('auth:expired', onAuthExpired)
-    return () => window.removeEventListener('auth:expired', onAuthExpired)
+    function onShowLogin() { setVista('login') }
+    window.addEventListener('ui:show-login', onShowLogin)
+    return () => { window.removeEventListener('auth:expired', onAuthExpired); window.removeEventListener('ui:show-login', onShowLogin) }
   }, [logout, showToast])
 
   const procesarVenta = async (metodoPago) => {
@@ -174,7 +181,13 @@ export default function App() {
             <div className={`nav-item`} onClick={() => setVista('clients')}>Clientes</div>
             <div className={`nav-item`} onClick={() => setVista('cart')}>Carrito ({carrito.length})</div>
           </nav>
-          <div className="nav-right">
+          <div className="nav-right" style={{display:'flex',alignItems:'center',gap:12}}>
+            {usuarioActual && (
+              <div className="profile" title={usuarioActual.name} style={{display:'flex',alignItems:'center',gap:8}}>
+                <div className="avatar">{(usuarioActual.name || usuarioActual.email || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div>
+                <div className="muted" style={{fontSize:12}}>{usuarioActual.name}</div>
+              </div>
+            )}
             <button className="button" onClick={() => { logout(); setVista('login') }}>Logout</button>
           </div>
         </div>

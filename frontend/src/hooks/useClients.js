@@ -58,6 +58,19 @@ export function useClients() {
     }
   }
 
-  useEffect(() => { fetch() }, [])
+  useEffect(() => {
+    let active = true
+    async function maybeFetch() {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      if (!active) return
+      await fetch()
+    }
+    maybeFetch()
+    // re-fetch when auth changes
+    function onAuthChanged() { maybeFetch() }
+    window.addEventListener('auth:changed', onAuthChanged)
+    return () => { active = false; window.removeEventListener('auth:changed', onAuthChanged) }
+  }, [])
   return { clients, fetch, agregarCliente: add, eliminarCliente: remove, editarCliente: edit, loading }
 }
