@@ -89,3 +89,9 @@ git push
 Esto **no** borra tus archivos locales; sólo los quita del índice de Git para que no se suban en commits futuros.
 
 Si prefieres mantener `package-lock.json` en el repo por reproducibilidad, elimina las líneas relevantes de `.gitignore` y mantén sólo la exclusión de `node_modules/`.
+
+## 🖼️ Imágenes de productos
+
+- El modelo `Product` ahora incluye un campo `image` que puede contener la URL de una imagen (externa o alojada en tu servidor). En el frontend puedes añadir la URL al crear un producto usando la opción **Agregar producto**; también puedes editar un producto y cambiar su `image`.
+- Si prefieres alojar las imágenes en tu propio backend, considera añadir un endpoint de subida (por ejemplo usando `multer`) que guarde archivos en `backend/uploads/` y devuelva la URL para guardar en `product.image`. Recuerda añadir `/backend/uploads` a `.gitignore`.
+- Para pruebas rápidas, el catálogo ya viene con imágenes de ejemplo para los productos semilla.
