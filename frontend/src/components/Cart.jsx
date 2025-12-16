@@ -46,7 +46,16 @@ export default function Cart({ carrito, clientes, clienteSeleccionado, onElimina
         <div className="form-row">
           <div>
             <label>Cliente</label>
-            <select disabled={clientes.length === 0} onChange={e => onSeleccionarCliente(clientes.find(c => c.id === Number(e.target.value)))} value={clienteSeleccionado?.id || ''}>
+            <select
+              disabled={clientes.length === 0}
+              onChange={e => {
+                const val = e.target.value
+                // client IDs are UUID strings on the server, compare as strings
+                const found = clientes.find(c => String(c.id) === String(val)) || null
+                onSeleccionarCliente(found)
+              }}
+              value={clienteSeleccionado?.id || ''}
+            >
               <option value="">{clientes.length === 0 ? 'Cargando clientes...' : '--Selecciona--'}</option>
               {clientes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>

@@ -33,7 +33,11 @@ async function seed() {
       { name: 'Juan Pérez', email: 'juan.perez@example.com', phone: '+51 912 345 678' },
       { name: 'María Gómez', email: 'maria.gomez@example.com', phone: '+51 923 456 789' },
       { name: 'Carlos Ruiz', email: 'carlos.ruiz@example.com', phone: '+51 934 567 890' },
-      { name: 'Ana Torres', email: 'ana.torres@example.com', phone: '+51 945 678 901' }
+      { name: 'Ana Torres', email: 'ana.torres@example.com', phone: '+51 945 678 901' },
+      { name: 'Luis Fernández', email: 'luis.fernandez@example.com', phone: '+51 956 789 012' },
+      { name: 'Sofía Morales', email: 'sofia.morales@example.com', phone: '+51 967 890 123' },
+      { name: 'Diego López', email: 'diego.lopez@example.com', phone: '+51 978 901 234' },
+      { name: 'Valentina Ríos', email: 'valentina.rios@example.com', phone: '+51 989 012 345' }
     ]
 
     for (const c of clients) {
