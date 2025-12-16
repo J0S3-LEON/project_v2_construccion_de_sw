@@ -30,11 +30,9 @@ yarn-error.log*
 /frontend/node_modules/
 /frontend/dist/
 /frontend/.vite/
-/frontend/package-lock.json
 
 # Backend deps
 /backend/node_modules/
-/backend/package-lock.json
 
-# Ignore all package-lock files (if you prefer to keep them, remove this)
-**/package-lock.json
+# By default we keep lockfiles in the repo for reproducibility.
+# If you prefer not to, remove the next lines and `git add`/`git commit` the removal.

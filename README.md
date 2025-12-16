@@ -59,7 +59,23 @@ npm run dev
 
 - **Docker**: Los archivos `Dockerfile` y `docker-compose.yml` se mantienen en el repositorio para facilitar despliegues y ejecución reproducible en local/CI. Mantenerlos es recomendable si planeas usar contenedores.
 - **Paquetes y lock files**: No es buena práctica subir `node_modules/` ni otros artefactos de dependencias. Si prefieres que los archivos de lock (`package-lock.json`) tampoco estén en el repositorio, ya están ignorados por `.gitignore`.
+- **Paquetes y lock files**: No es buena práctica subir `node_modules/` ni otros artefactos de dependencias. En este repositorio **mantenemos** los lockfiles (`package-lock.json`) para garantizar reproducibilidad y estabilidad en CI/CD.
 
+Si por alguna razón quieres quitar los lockfiles del repo en el futuro, puedes eliminar las líneas correspondientes del `.gitignore` y ejecutar:
+
+```cmd
+git rm --cached frontend\package-lock.json backend\package-lock.json
+git commit -m "chore: remove package-lock.json files"
+git push
+```
+
+Si por el contrario quieres (re)añadir los lockfiles al repositorio ahora, ejecuta:
+
+```cmd
+git add frontend\package-lock.json backend\package-lock.json
+git commit -m "chore: add package-lock.json files"
+git push
+```
 Si tienes dependencias instaladas localmente y quieres dejar de subirlas sin borrarlas del disco, puedes ejecutar (desde la raíz del proyecto, en cmd.exe):
 
 ```cmd
