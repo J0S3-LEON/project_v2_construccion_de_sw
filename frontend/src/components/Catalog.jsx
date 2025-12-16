@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import AddProductModal from './AddProductModal'
 
-export default function Catalog({ productos, onAgregar, loading = false }) {
+export default function Catalog({ productos, onAgregar, onCrearProducto, loading = false }) {
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
   const perPage = 9
@@ -28,12 +28,19 @@ export default function Catalog({ productos, onAgregar, loading = false }) {
   }
 
   async function handleCrearProducto(payload) {
+    if (!onCrearProducto) return showToast('Funcionalidad no disponible. Inicia sesión para crear productos.', 'error')
     try {
       await onCrearProducto(payload)
       showToast('Producto agregado', 'info')
       window.dispatchEvent(new CustomEvent('products:updated'))
       setModalOpen(false)
     } catch (err) {
+      if (err.response?.status === 401) {
+        showToast('No autorizado. Por favor, inicia sesión.', 'error')
+        window.dispatchEvent(new CustomEvent('auth:expired'))
+        window.dispatchEvent(new CustomEvent('ui:show-login'))
+        return
+      }
       showToast(err.response?.data?.message || err.message || 'Error al crear producto', 'error')
     }
   }
@@ -44,11 +51,15 @@ export default function Catalog({ productos, onAgregar, loading = false }) {
     <div>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
         <h2>Catálogo</h2>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
           <div style={{width:320}}>
             <input placeholder="Buscar productos..." value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
           </div>
-          <button className="btn-secondary" onClick={() => setModalOpen(true)}>Agregar producto</button>
+          {localStorage.getItem('token') ? (
+            <button className="btn-secondary" onClick={() => setModalOpen(true)}>Agregar producto</button>
+          ) : (
+            <button className="btn-secondary" onClick={() => window.dispatchEvent(new CustomEvent('ui:show-login'))}>Agregar producto</button>
+          )}
         </div>
       </div>
 

@@ -36,7 +36,7 @@ export default function SalesHistory() {
               <div>A total: ${s.total}</div>
               <div className="muted">Productos:</div>
               <ul>
-                {(s.items || []).map(it => <li key={it.id}>{it.qty} × {it.productId} (${it.price})</li>)}
+                {(s.items || []).map(it => <li key={it.id}>{it.qty} × {it.product?.name || it.productId} (${it.price})</li>)}
               </ul>
             </div>
           </div>
