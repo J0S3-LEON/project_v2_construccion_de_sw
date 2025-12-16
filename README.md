@@ -95,3 +95,39 @@ Si prefieres mantener `package-lock.json` en el repo por reproducibilidad, elimi
 - El modelo `Product` ahora incluye un campo `image` que puede contener la URL de una imagen (externa o alojada en tu servidor). En el frontend puedes añadir la URL al crear un producto usando la opción **Agregar producto**; también puedes editar un producto y cambiar su `image`.
 - Si prefieres alojar las imágenes en tu propio backend, considera añadir un endpoint de subida (por ejemplo usando `multer`) que guarde archivos en `backend/uploads/` y devuelva la URL para guardar en `product.image`. Recuerda añadir `/backend/uploads` a `.gitignore`.
 - Para pruebas rápidas, el catálogo ya viene con imágenes de ejemplo para los productos semilla.
+
+## 🛠️ Solución de problemas: productos o clientes no se muestran
+
+Si al abrir la app en el navegador no se visualizan productos o la lista de clientes está vacía, sigue estos pasos:
+
+1. Verifica que el **backend** esté corriendo:
+	- En la carpeta `backend/` ejecuta:
+	  - Windows (cmd.exe): `npm run dev`
+	  - Unix: `npm run dev`
+
+2. Asegúrate de que la base de datos tiene datos (ejecuta el seed):
+	- `cd backend && npm run seed`
+	- Debes ver `Seeding completed` en la salida. Si ves errores revisa el log y corrige el problema antes de continuar.
+
+3. Comprueba que la **URL de la API** esté configurada correctamente en el frontend:
+	- Revisa `frontend/.env` o la variable `VITE_API_URL` (por defecto: `http://localhost:4000/api/v1`).
+
+4. Inicia el **frontend** y refresca la página:
+	- `cd frontend && npm run dev`
+	- Usa el botón **Refresh** en la cabecera de la aplicación para forzar la recarga de productos y clientes.
+
+5. Ten en cuenta la **autenticación**:
+	- La lista de clientes se carga sólo si hay una sesión activa (requiere login). Usa `admin@example.com / admin123` para acceder al sistema de pruebas.
+
+6. Revisa la consola del navegador y la pestaña "Network" para errores:
+	- Si hay respuestas 401 -> cierra sesión y vuelve a iniciar sesión.
+	- Si hay errores CORS o de conexión, comprueba que la API está accesible desde `VITE_API_URL`.
+
+7. Si los seeds fallan por problemas de esquema o foreign keys, revisa los logs del backend. Como último recurso puedes reiniciar la BD local (nota: esto eliminará datos):
+	- Windows (cmd): `del backend\database.sqlite && cd backend && npm run seed`
+	- Unix: `rm backend/database.sqlite && cd backend && npm run seed`
+
+8. Ejecuta los tests para verificar flujos críticos:
+	- `cd backend && npm test`
+
+Si después de estos pasos sigues sin ver productos o clientes, copia aquí los mensajes de error de la consola o del seed y te ayudo a diagnosticarlo.
