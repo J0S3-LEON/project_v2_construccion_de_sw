@@ -1,5 +1,12 @@
 import * as salesService from './sales.service.js';
 
+export async function statsController(req, res, next) {
+  try {
+    const stats = await salesService.getSalesStats();
+    res.json(stats);
+  } catch (err) { next(err) }
+}
+
 export async function createSaleController(req, res, next) {
   try {
     const sale = await salesService.createSale(req.body);

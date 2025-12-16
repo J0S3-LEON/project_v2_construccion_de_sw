@@ -55,5 +55,8 @@ export const SaleItem = sequelize.define('SaleItem', {
 // Associations (to be used during runtime)
 Sale.hasMany(SaleItem, { foreignKey: 'saleId', as: 'items' });
 SaleItem.belongsTo(Sale, { foreignKey: 'saleId' });
+// Associate sale items with product for richer queries
+import { Product } from '../products/products.model.js';
+SaleItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 export default { Sale, SaleItem };

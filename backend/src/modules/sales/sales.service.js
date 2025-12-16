@@ -35,7 +35,7 @@ export async function createSale({ clientId, items, paymentMethod }) {
       await prod.decrement('stock', { by: it.qty, transaction: trx });
     }
 
-    const saleWithItems = await Sale.findByPk(sale.id, { include: [{ model: SaleItem, as: 'items' }], transaction: trx });
+    const saleWithItems = await Sale.findByPk(sale.id, { include: [{ model: SaleItem, as: 'items', include: [{ model: Product, as: 'product' }] }], transaction: trx });
     return saleWithItems;
   });
 }
@@ -44,10 +44,17 @@ export async function listSales({ page = 1, limit = 20, clientId } = {}) {
   const offset = (page - 1) * limit;
   const where = {};
   if (clientId) where.clientId = clientId;
-  const { rows, count } = await Sale.findAndCountAll({ where, limit, offset, order: [['createdAt', 'DESC']], include: [{ model: SaleItem, as: 'items' }] });
+  const { rows, count } = await Sale.findAndCountAll({ where, limit, offset, order: [['createdAt', 'DESC']], include: [{ model: SaleItem, as: 'items', include: [{ model: Product, as: 'product' }] }] });
   return { data: rows, meta: { count, page, limit } };
 }
 
 export async function getSaleById(id) {
   return Sale.findByPk(id, { include: [{ model: SaleItem, as: 'items' }] });
+}
+
+export async function getSalesStats() {
+  // Return total count and sum of total (handled by DB)
+  const result = await Sale.findAll({ attributes: [[sequelize.fn('COUNT', sequelize.col('id')), 'totalVentas'], [sequelize.fn('SUM', sequelize.col('total')), 'ingresosTotales']] });
+  const row = result && result[0] ? result[0].dataValues : { totalVentas: 0, ingresosTotales: 0 };
+  return { totalVentas: Number(row.totalVentas || 0), ingresosTotales: Number(row.ingresosTotales || 0) };
 }
