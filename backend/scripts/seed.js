@@ -7,8 +7,12 @@ import { Client } from '../src/modules/clients/clients.model.js'
 async function seed() {
   try {
     await sequelize.authenticate()
-    // ensure DB schema is up-to-date for development (adds new columns)
-    await sequelize.sync({ alter: true })
+    // ensure DB schema is available; avoid destructive ALTER that may fail due to FK constraints
+    try {
+      await sequelize.sync()
+    } catch (err) {
+      console.warn('Warning: sequelize.sync() failed, continuing with seeding if possible', err.message)
+    }
 
     const products = [
       { name: 'Zapatillas Runner', description: 'Cómodas y ligeras', price: 59.99, stock: 10, sku: 'ZR-001', image: 'https://images.unsplash.com/photo-1519744792095-2f2205e87b6f?auto=format&fit=crop&w=400&q=80' },
@@ -25,7 +29,21 @@ async function seed() {
       { name: 'Toalla deportiva', description: 'Secado rápido, compacta', price: 8.99, stock: 40, sku: 'TD-012', image: 'https://images.unsplash.com/photo-1485968570982-9b0f9d89d2b5?auto=format&fit=crop&w=400&q=80' }
     ]
 
+    // additional demo products
+    const moreProducts = [
+      { name: 'Cuerda de saltar profesional', description: 'Longitud ajustable, asas ergonómicas', price: 7.99, stock: 60, sku: 'CS-013', image: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Colchoneta yoga', description: 'Antideslizante 6mm', price: 21.99, stock: 30, sku: 'CY-014', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Soporte para botella', description: 'Compatible con bicicletas', price: 11.50, stock: 45, sku: 'SB-015', image: 'https://images.unsplash.com/photo-1504609813442-a8922a2a0a2a?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Gimnasio de pulseras (resistance band)', description: 'Set de 3 niveles', price: 18.00, stock: 25, sku: 'RB-016', image: 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Monitor de ritmo cardíaco', description: 'Bluetooth, resistente al sudor', price: 49.99, stock: 10, sku: 'HR-017', image: 'https://images.unsplash.com/photo-1516900528554-3c11a56f7b9b?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Bandana deportiva', description: 'Absorbe sudor, ligera', price: 6.50, stock: 100, sku: 'BD-018', image: 'https://images.unsplash.com/photo-1520975690888-272b1f1c7a2b?auto=format&fit=crop&w=400&q=80' }
+    ]
+
     for (const p of products) {
+      await Product.findOrCreate({ where: { sku: p.sku }, defaults: p })
+    }
+
+    for (const p of moreProducts) {
       await Product.findOrCreate({ where: { sku: p.sku }, defaults: p })
     }
 
@@ -37,11 +55,24 @@ async function seed() {
       { name: 'Luis Fernández', email: 'luis.fernandez@example.com', phone: '+51 956 789 012' },
       { name: 'Sofía Morales', email: 'sofia.morales@example.com', phone: '+51 967 890 123' },
       { name: 'Diego López', email: 'diego.lopez@example.com', phone: '+51 978 901 234' },
-      { name: 'Valentina Ríos', email: 'valentina.rios@example.com', phone: '+51 989 012 345' }
+      { name: 'Valentina Ríos', email: 'valentina.rios@example.com', phone: '+51 989 012 345' },
+      { name: 'Marcos Díaz', email: 'marcos.diaz@example.com', phone: '+51 990 123 456' },
+      { name: 'Patricia Salas', email: 'patricia.salas@example.com', phone: '+51 991 234 567' },
+      { name: 'Hugo Vargas', email: 'hugo.vargas@example.com', phone: '+51 992 345 678' }
     ]
 
     for (const c of clients) {
       await Client.findOrCreate({ where: { email: c.email }, defaults: c })
+    }
+
+    // Remove a specific problematic sale from history if present
+    try {
+      const { Sale } = await import('../src/modules/sales/sales.model.js')
+      const problematicId = 'eb34a5bc-841b-4a7c-bbd2-e38b2b42be3a'
+      const deleted = await Sale.destroy({ where: { id: problematicId } })
+      if (deleted) console.log(`Removed problematic sale ${problematicId} from DB`)
+    } catch (err) {
+      // Ignore if sales model/table doesn't exist yet in dev environments
     }
 
     console.log('Seeding completed')
