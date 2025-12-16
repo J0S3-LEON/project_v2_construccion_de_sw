@@ -1,0 +1,40 @@
+# Node modules
+node_modules/
+
+# Env files
+*.env
+*.env.local
+.env.*.local
+
+# Databases
+dev.sqlite
+
+# Build / coverage
+dist/
+coverage/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore local IDE settings
+.env
+
+# Frontend build / deps
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+/frontend/package-lock.json
+
+# Backend deps
+/backend/node_modules/
+/backend/package-lock.json
+
+# Ignore all package-lock files (if you prefer to keep them, remove this)
+**/package-lock.json
