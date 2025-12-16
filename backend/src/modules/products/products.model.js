@@ -30,6 +30,10 @@ export const Product = sequelize.define('Product', {
     allowNull: false,
     defaultValue: 0,
   },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

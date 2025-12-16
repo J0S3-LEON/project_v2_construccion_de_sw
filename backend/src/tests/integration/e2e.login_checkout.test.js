@@ -25,9 +25,11 @@ describe('E2E: login -> create client/product -> checkout', () => {
     const client = clientRes.body.client
 
     // create product
-    const productRes = await request(app).post('/api/v1/products').set('Authorization', `Bearer ${token}`).send({ name: 'Producto E2E', price: 5.5, stock: 10, sku: 'E2E-001' })
+    const imageUrl = 'https://images.unsplash.com/photo-1519744792095-2f2205e87b6f?auto=format&fit=crop&w=400&q=80'
+    const productRes = await request(app).post('/api/v1/products').set('Authorization', `Bearer ${token}`).send({ name: 'Producto E2E', price: 5.5, stock: 10, sku: 'E2E-001', image: imageUrl })
     expect(productRes.status).toBe(201)
     const product = productRes.body.product
+    expect(product.image).toBe(imageUrl)
 
     // perform sale
     const salePayload = { clientId: client.id, items: [{ productId: product.id, qty: 2 }], paymentMethod: 'cash' }
