@@ -15,8 +15,8 @@ import LoginModal from './components/LoginModal'
 export default function App() {
   const { usuarioActual, logout } = useAuth()
   const { showToast } = useToast()
-  const { clients, agregarCliente, eliminarCliente, editarCliente, loading: clientsLoading } = useClients()
-  const { products, loading: productsLoading, createProduct } = useProducts()
+  const { clients, fetch: fetchClients, agregarCliente, eliminarCliente, editarCliente, loading: clientsLoading } = useClients()
+  const { products, fetch: fetchProducts, loading: productsLoading, createProduct } = useProducts()
   const { checkout } = useSales()
 
   const [vista, setVista] = useState(usuarioActual ? 'dashboard' : 'login')
@@ -186,6 +186,7 @@ export default function App() {
             <div className={`nav-item`} onClick={() => setVista('cart')}>Carrito ({carrito.length})</div>
           </nav>
           <div className="nav-right" style={{display:'flex',alignItems:'center',gap:12}}>
+            <button className="btn-ghost" onClick={async () => { await fetchProducts(); await fetchClients(); showToast('Datos actualizados', 'info') }}>Refresh</button>
             {usuarioActual && (
               <div className="profile" title={usuarioActual.name} style={{display:'flex',alignItems:'center',gap:8}}>
                 <div className="avatar">{(usuarioActual.name || usuarioActual.email || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div>
