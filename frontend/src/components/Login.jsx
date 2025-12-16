@@ -48,9 +48,8 @@ export default function Login({ setVista }) {
     e.preventDefault()
     try {
       await register({ name: name || email.split('@')[0], email, password })
-      setSuccessMsg('Registrado. Ya puedes iniciar sesión.')
-      setTimeout(() => setSuccessMsg(''), 3000)
-      setShowRegister(false)
+      // register auto-logins via AuthProvider — redirect to dashboard
+      setVista('dashboard')
     } catch (err) {
       showError(err)
     }

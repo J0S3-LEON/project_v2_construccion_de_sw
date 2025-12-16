@@ -35,7 +35,11 @@ async function start() {
           { name: 'Camiseta Deportiva', description: 'Transpirable', price: 19.50, stock: 25, sku: 'CD-002' },
           { name: 'Balón Oficial', description: 'Tamaño 5', price: 29.00, stock: 5, sku: 'BO-003' },
           { name: 'Malla de Natación', description: 'Resistente al cloro', price: 24.99, stock: 8, sku: 'MN-004' },
-          { name: 'Gorra Runner', description: 'Ligera y ajustable', price: 12.00, stock: 0, sku: 'GR-005' }
+          { name: 'Gorra Runner', description: 'Ligera y ajustable', price: 12.00, stock: 0, sku: 'GR-005' },
+          { name: 'Sudadera con capucha', description: 'Cálida y cómoda', price: 39.99, stock: 15, sku: 'SC-006' },
+          { name: 'Calcetines deportivos (pack 3)', description: 'Transpirables', price: 9.99, stock: 50, sku: 'CD-007' },
+          { name: 'Botella de agua', description: 'Acero inoxidable 500ml', price: 14.99, stock: 30, sku: 'BW-008' },
+          { name: 'Mochila deportiva', description: 'Espaciosa, con compartimento para zapatillas', price: 49.99, stock: 12, sku: 'MD-009' }
         ])
         console.log('Seeded example products')
       }

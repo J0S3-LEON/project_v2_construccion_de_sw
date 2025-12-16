@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard'
 import Catalog from './components/Catalog'
 import Clients from './components/Clients'
 import Cart from './components/Cart'
+import LoginModal from './components/LoginModal'
 
 export default function App() {
   const { usuarioActual, logout } = useAuth()
@@ -121,15 +122,18 @@ export default function App() {
   // Listen for auth expiration events (from hooks/components)
   useEffect(() => {
     function onAuthExpired() {
-      showToast('Sesión expirada, vuelva a iniciar sesión', 'error')
+      // when session expires, clear local session and show re-login modal
+      showToast('Sesión expirada, por favor vuelva a iniciar sesión', 'error')
       logout()
-      setVista('login')
+      setShowRelogin(true)
     }
     window.addEventListener('auth:expired', onAuthExpired)
     function onShowLogin() { setVista('login') }
     window.addEventListener('ui:show-login', onShowLogin)
     return () => { window.removeEventListener('auth:expired', onAuthExpired); window.removeEventListener('ui:show-login', onShowLogin) }
   }, [logout, showToast])
+
+  const [showRelogin, setShowRelogin] = useState(false)
 
   const procesarVenta = async (metodoPago) => {
     if (!clienteSeleccionado) return showToast('Seleccione cliente', 'error')
@@ -169,6 +173,43 @@ export default function App() {
   }, [usuarioActual])
 
   if (!usuarioActual) return <Login setVista={setVista} />
+
+  return (
+    <div>
+      <header className="site-header">
+        <div className="container">
+          <div className="logo" onClick={() => setVista('dashboard')} style={{cursor:'pointer'}}>Kioma Sport</div>
+          <nav className="nav">
+            <div className={`nav-item`} onClick={() => setVista('dashboard')}>Dashboard</div>
+            <div className={`nav-item`} onClick={() => setVista('catalog')}>Catálogo</div>
+            <div className={`nav-item`} onClick={() => setVista('clients')}>Clientes</div>
+            <div className={`nav-item`} onClick={() => setVista('cart')}>Carrito ({carrito.length})</div>
+          </nav>
+          <div className="nav-right" style={{display:'flex',alignItems:'center',gap:12}}>
+            {usuarioActual && (
+              <div className="profile" title={usuarioActual.name} style={{display:'flex',alignItems:'center',gap:8}}>
+                <div className="avatar">{(usuarioActual.name || usuarioActual.email || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div>
+                <div className="muted" style={{fontSize:12}}>{usuarioActual.name}</div>
+              </div>
+            )}
+            <button className="button" onClick={() => { logout(); setVista('login') }}>Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container" style={{paddingTop:12}}>
+        {vista === 'dashboard' && <Dashboard totalVentas={totalVentas} ingresosTotales={ingresosTotales} />}
+        {vista === 'catalog' && <Catalog productos={products} onAgregar={agregarAlCarrito} onCrearProducto={createProduct} loading={productsLoading} />}
+        {vista === 'clients' && <Clients clients={clients} onAgregarCliente={agregarCliente} onEliminarCliente={eliminarCliente} onEditarCliente={editarCliente} loading={clientsLoading} />}
+        {vista === 'cart' && <Cart carrito={carrito} clientes={clients} clienteSeleccionado={clienteSeleccionado} onEliminarDelCarrito={eliminarDelCarrito} onSeleccionarCliente={setClienteSeleccionado} onProcesarVenta={procesarVenta} />}
+      </main>
+      <footer style={{padding:'24px 0', marginTop:24}} className="center">
+        <div className="muted">Kioma Sport · Proyecto final · &copy; {new Date().getFullYear()}</div>
+      </footer>
+
+      {showRelogin && <LoginModal onClose={() => setShowRelogin(false)} />}
+    </div>
+  )
 
   return (
     <div>
