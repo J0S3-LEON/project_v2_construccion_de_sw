@@ -1,14 +1,6 @@
 # Node modules
 node_modules/
 
-# Env files
-*.env
-*.env.local
-.env.*.local
-
-# Databases
-dev.sqlite
-
 # Build / coverage
 dist/
 coverage/
@@ -23,16 +15,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Ignore local IDE settings
-.env
-
 # Frontend build / deps
 /frontend/node_modules/
 /frontend/dist/
 /frontend/.vite/
 
-# Backend deps
 /backend/node_modules/
 
-# By default we keep lockfiles in the repo for reproducibility.
-# If you prefer not to, remove the next lines and `git add`/`git commit` the removal.
+# Lockfiles se mantienen (package-lock.json / yarn.lock)
+
+# Environment files
+*.env
+
+# Local sqlite DBs
+*.sqlite
+backend/dev.sqlite
