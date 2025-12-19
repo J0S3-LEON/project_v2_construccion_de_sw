@@ -2,7 +2,12 @@ import { sequelize } from '../../db/index.js';
 import { createProduct, getProductById } from '../../modules/products/products.service.js';
 
 beforeAll(async () => {
-  await sequelize.sync({ force: true });
+  try {
+    await sequelize.sync({ force: true });
+  } catch (err) {
+    console.error('Sequelize sync error:', err);
+    throw err;
+  }
 });
 
 afterAll(async () => {
