@@ -8,7 +8,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node scripts/seed.js",
-    "test": "cross-env DATABASE_URL=sqlite::memory: NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "lint": "echo \"Add linter script\""
   },
   "jest": {
