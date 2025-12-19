@@ -51,7 +51,7 @@ npm run dev
 ---
 
 ## 🔐 Credenciales y datos de ejemplo
-- Usuario admin por defecto (seed): **admin@example.com / admin123**
+- Ejemplo de Usuario admin por defecto (seed): **admin@example.com / admin123**
 - El seed también inserta varios productos y clientes para pruebas (uno de los productos tiene stock=0 para validar restricciones).
 
 ---
